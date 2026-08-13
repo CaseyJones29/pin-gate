@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Access Required</title>
+<style>
+  :root{
+    --bg: #12151b;
+    --bg-soft: #191d25;
+    --panel: #1d222b;
+    --line: #2a303c;
+    --text: #ede9e0;
+    --muted: #8b93a3;
+    --accent: #2fa89f;
+    --accent-dim: #22645f;
+    --error: #e4573d;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; margin:0; }
+
+  body{
+    background:
+      radial-gradient(circle at 50% 0%, #1a2029 0%, var(--bg) 60%);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding: 24px;
+  }
+
+  .card{
+    width:100%;
+    max-width: 380px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 40px 32px 32px;
+    text-align:center;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6);
+    position: relative;
+  }
+
+  .dial{
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 22px;
+    border-radius: 50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: conic-gradient(from 180deg, var(--accent-dim), var(--accent), var(--accent-dim));
+    box-shadow: 0 0 0 1px var(--line), 0 8px 24px -8px rgba(47,168,159,0.5);
+  }
+  .dial svg{ width:26px; height:26px; }
+
+  h1{
+    font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+    font-size: 15px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin: 0 0 6px;
+    color: var(--text);
+  }
+
+  p.sub{
+    margin: 0 0 28px;
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  form{ display:flex; flex-direction:column; gap: 14px; }
+
+  input[type="text"]{
+    width: 100%;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+    font-size: 20px;
+    letter-spacing: 0.3em;
+    text-align:center;
+    padding: 16px 12px;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  input[type="text"]::placeholder{
+    letter-spacing: normal;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  input[type="text"]:focus{
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(47,168,159,0.18);
+  }
+
+  button.submit{
+    background: var(--accent);
+    color: #0c1210;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: filter .15s ease, transform .05s ease;
+  }
+  button.submit:hover{ filter: brightness(1.08); }
+  button.submit:active{ transform: scale(0.98); }
+
+  .error{
+    display:none;
+    color: var(--error);
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  .error.show{ display:block; }
+
+  .shake{ animation: shake .32s ease; }
+  @keyframes shake{
+    0%,100%{ transform: translateX(0); }
+    20%{ transform: translateX(-8px); }
+    40%{ transform: translateX(7px); }
+    60%{ transform: translateX(-5px); }
+    80%{ transform: translateX(3px); }
+  }
+
+  .success-note{
+    display:none;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  .success-note.show{ display:block; }
+
+  /* admin gear */
+  .gear-btn{
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--bg-soft);
+    color: var(--muted);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor: pointer;
+    opacity: 0.55;
+    transition: opacity .15s ease;
+  }
+  .gear-btn:hover{ opacity: 1; }
+  .gear-btn svg{ width:16px; height:16px; }
+
+  .modal-overlay{
+    display:none;
+    position: fixed;
+    inset: 0;
+    background: rgba(6,8,11,0.72);
+    align-items:center;
+    justify-content:center;
+    padding: 20px;
+    z-index: 50;
+  }
+  .modal-overlay.show{ display:flex; }
+
+  .modal{
+    width:100%;
+    max-width: 360px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 26px;
+  }
+  .modal h2{
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0 0 4px;
+  }
+  .modal p{
+    font-size: 12.5px;
+    color: var(--muted);
+    margin: 0 0 18px;
+    line-height:1.5;
+  }
+  .modal label{
+    display:block;
+    font-size: 11.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+    text-align:left;
+  }
+  .modal input[type="text"],
+  .modal input[type="password"],
+  .modal input[type="url"]{
+    width:100%;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    letter-spacing: normal;
+    text-align:left;
+    padding: 11px 12px;
+    outline:none;
+    margin-bottom: 14px;
+  }
+  .modal input:focus{ border-color: var(--accent); }
+  .modal-actions{ display:flex; gap:10px; }
+  .modal-actions button{
+    flex:1;
+    padding: 11px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor:pointer;
+    border: 1px solid var(--line);
+  }
+  .btn-cancel{ background: transparent; color: var(--muted); }
+  .btn-save{ background: var(--accent); color:#0c1210; border-color: var(--accent); }
+  .modal-status{
+    font-size: 12px;
+    margin-top: 10px;
+    min-height: 16px;
+  }
+  .modal-status.ok{ color: var(--accent); }
+  .modal-status.bad{ color: var(--error); }
+
+  .current-url{
+    font-size: 11px;
+    color: var(--muted);
+    word-break: break-all;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 14px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="dial">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#0c1210" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="10" width="16" height="10" rx="2"></rect>
+        <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+      </svg>
+    </div>
+    <h1>Access Required</h1>
+    <p class="sub">Enter the code to continue.</p>
+
+    <form id="pinForm" autocomplete="off">
+      <input
+        type="text"
+        id="pinInput"
+        placeholder="Enter code"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+        inputmode="text"
+      >
+      <div class="error" id="errorMsg">Please try again</div>
+      <div class="success-note" id="successMsg">Correct — redirecting…</div>
+      <button type="submit" class="submit">Unlock</button>
+    </form>
+  </div>
+
+  <!-- Admin gear -->
+  <div class="gear-btn" id="gearBtn" title="Settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"></circle>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    </svg>
+  </div>
+
+  <!-- Admin modal: step 1, passcode -->
+  <div class="modal-overlay" id="adminGate">
+    <div class="modal">
+      <h2>Admin Access</h2>
+      <p>Enter the admin passcode to edit where this page redirects to.</p>
+      <label for="adminPass">Admin passcode</label>
+      <input type="password" id="adminPass" autocomplete="off">
+      <div class="modal-actions">
+        <button class="btn-cancel" id="adminGateCancel">Cancel</button>
+        <button class="btn-save" id="adminGateSubmit">Continue</button>
+      </div>
+      <div class="modal-status" id="adminGateStatus"></div>
+    </div>
+  </div>
+
+  <!-- Admin modal: step 2, edit redirect -->
+  <div class="modal-overlay" id="adminPanel">
+    <div class="modal">
+      <h2>Edit Redirect</h2>
+      <p>This is where visitors land after entering the correct code.</p>
+      <label>Current redirect URL</label>
+      <div class="current-url" id="currentUrlDisplay">—</div>
+      <label for="newUrl">New redirect URL</label>
+      <input type="url" id="newUrl" placeholder="https://example.com/...">
+      <div class="modal-actions">
+        <button class="btn-cancel" id="adminPanelClose">Close</button>
+        <button class="btn-save" id="adminPanelSave">Save</button>
+      </div>
+      <div class="modal-status" id="adminPanelStatus"></div>
+    </div>
+  </div>
+
+<script>
+  // ---------- CONFIG ----------
+  // Change these two values to update the access code and admin passcode.
+  const PIN = "?63_80";
+  const ADMIN_PASSCODE = "letmein2026";
+  const DEFAULT_REDIRECT_URL = "https://www.amazon.com.au/Becoming-Diddy-Making-Combs-Monster/dp/B0DR2Y6RSL";
+  const STORAGE_KEY = "redirect-url";
+  // ----------------------------
+
+  const pinForm = document.getElementById('pinForm');
+  const pinInput = document.getElementById('pinInput');
+  const errorMsg = document.getElementById('errorMsg');
+  const successMsg = document.getElementById('successMsg');
+  const card = document.querySelector('.card');
+
+  const gearBtn = document.getElementById('gearBtn');
+  const adminGate = document.getElementById('adminGate');
+  const adminPass = document.getElementById('adminPass');
+  const adminGateCancel = document.getElementById('adminGateCancel');
+  const adminGateSubmit = document.getElementById('adminGateSubmit');
+  const adminGateStatus = document.getElementById('adminGateStatus');
+
+  const adminPanel = document.getElementById('adminPanel');
+  const currentUrlDisplay = document.getElementById('currentUrlDisplay');
+  const newUrl = document.getElementById('newUrl');
+  const adminPanelClose = document.getElementById('adminPanelClose');
+  const adminPanelSave = document.getElementById('adminPanelSave');
+  const adminPanelStatus = document.getElementById('adminPanelStatus');
+
+  let redirectUrl = DEFAULT_REDIRECT_URL;
+
+  async function loadRedirectUrl(){
+    try{
+      const result = await window.storage.get(STORAGE_KEY, true);
+      if(result && result.value){
+        redirectUrl = result.value;
+      }
+    }catch(e){
+      // no custom value saved yet — fall back to default
+      redirectUrl = DEFAULT_REDIRECT_URL;
+    }
+    currentUrlDisplay.textContent = redirectUrl;
+  }
+  loadRedirectUrl();
+
+  // ---- PIN check ----
+  pinForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    const entered = pinInput.value;
+
+    if(entered === PIN){
+      errorMsg.classList.remove('show');
+      successMsg.classList.add('show');
+      pinInput.disabled = true;
+      setTimeout(function(){
+        window.location.href = redirectUrl;
+      }, 500);
+    } else {
+      successMsg.classList.remove('show');
+      errorMsg.classList.add('show');
+      card.classList.remove('shake');
+      void card.offsetWidth; // restart animation
+      card.classList.add('shake');
+      pinInput.value = '';
+      pinInput.focus();
+    }
+  });
+
+  // ---- Admin flow ----
+  function openAdminGate(){
+    adminPass.value = '';
+    adminGateStatus.textContent = '';
+    adminGateStatus.className = 'modal-status';
+    adminGate.classList.add('show');
+    setTimeout(function(){ adminPass.focus(); }, 50);
+  }
+  function closeAdminGate(){ adminGate.classList.remove('show'); }
+
+  gearBtn.addEventListener('click', openAdminGate);
+  adminGateCancel.addEventListener('click', closeAdminGate);
+
+  adminGateSubmit.addEventListener('click', function(){
+    if(adminPass.value === ADMIN_PASSCODE){
+      closeAdminGate();
+      newUrl.value = '';
+      adminPanelStatus.textContent = '';
+      adminPanelStatus.className = 'modal-status';
+      currentUrlDisplay.textContent = redirectUrl;
+      adminPanel.classList.add('show');
+    } else {
+      adminGateStatus.textContent = 'Incorrect passcode';
+      adminGateStatus.className = 'modal-status bad';
+    }
+  });
+  adminPass.addEventListener('keydown', function(e){
+    if(e.key === 'Enter') adminGateSubmit.click();
+  });
+
+  adminPanelClose.addEventListener('click', function(){
+    adminPanel.classList.remove('show');
+  });
+
+  adminPanelSave.addEventListener('click', async function(){
+    const val = newUrl.value.trim();
+    if(!val){
+      adminPanelStatus.textContent = 'Enter a URL first';
+      adminPanelStatus.className = 'modal-status bad';
+      return;
+    }
+    try{
+      new URL(val); // basic validation
+    }catch(e){
+      adminPanelStatus.textContent = 'That doesn\'t look like a valid URL';
+      adminPanelStatus.className = 'modal-status bad';
+      return;
+    }
+    try{
+      await window.storage.set(STORAGE_KEY, val, true);
+      redirectUrl = val;
+      currentUrlDisplay.textContent = redirectUrl;
+      newUrl.value = '';
+      adminPanelStatus.textContent = 'Saved';
+      adminPanelStatus.className = 'modal-status ok';
+    }catch(e){
+      adminPanelStatus.textContent = 'Could not save — try again';
+      adminPanelStatus.className = 'modal-status bad';
+    }
+  });
+</script>
+
+</body>
+</html>
